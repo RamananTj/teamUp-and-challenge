@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.tournament</groupId>
+  <artifactId>teamupAndChallenge</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <parent>
+    <groupId>at.stderr</groupId>
+    <artifactId>maven-parent</artifactId>
+    <version>2.3.0</version>
+  </parent>
+
+
+	<dependencies>
+		<!-- Source: https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core -->
+		<dependency>
+		    <groupId>org.hibernate.orm</groupId>
+		    <artifactId>hibernate-core</artifactId>
+		    <version>7.4.10.Final</version>
+		    <scope>compile</scope>
+		</dependency>
+		<!-- Source: https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
+		<dependency>
+		    <groupId>com.mysql</groupId>
+		    <artifactId>mysql-connector-j</artifactId>
+		    <version>9.7.0</version>
+		    <scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- Build an executable JAR -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>${project.groupId}.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>com.tournament.Main</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
