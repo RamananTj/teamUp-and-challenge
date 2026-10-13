@@ -16,6 +16,12 @@ import com.tournament.teamupAndChallenge.entity.TeamMember;
 import com.tournament.teamupAndChallenge.entity.Venue;
 import com.tournament.teamupAndChallenge.entity.Match;
 import com.tournament.teamupAndChallenge.entity.MatchParticipant;
+import com.tournament.teamupAndChallenge.entity.Referee;
+import com.tournament.teamupAndChallenge.entity.RefereeAssignment;
+import com.tournament.teamupAndChallenge.entity.MatchResult;
+import com.tournament.teamupAndChallenge.entity.Tournament;
+import com.tournament.teamupAndChallenge.entity.TournamentParticipant;
+import com.tournament.teamupAndChallenge.entity.TournamentMatch;
 
 import com.tournament.teamupAndChallenge.repository.*;
 import com.tournament.teamupAndChallenge.service.*;
@@ -102,6 +108,12 @@ public class Main {
                 System.out.println("7. Venue Management");
                 System.out.println("8. Match Management");
                 System.out.println("9. Match Participant Management");
+                System.out.println("10. Referee Management");
+                System.out.println("11. Referee Assignment Management");
+                System.out.println("12. Match Result Management");
+                System.out.println("13. Tournament Management");
+                System.out.println("14. Tournament Participant Management");
+                System.out.println("15. Tournament Match Management");
                 System.out.println("0. Exit");
                 System.out.print("Enter choice: ");
 
@@ -122,6 +134,12 @@ public class Main {
                     case 7 -> venueMenu();
                     case 8 -> matchMenu();
                     case 9 -> participantMenu();
+                    case 10 -> refereeMenu();
+                    case 11 -> refereeAssignmentMenu();
+                    case 12 -> matchResultMenu();
+                    case 13 -> tournamentMenu();
+                    case 14 -> tournamentParticipantMenu();
+                    case 15 -> tournamentMatchMenu();
                     case 0 -> {
                     	running = false;
                         System.out.println("Exiting Team Up...");
@@ -1528,4 +1546,766 @@ public class Main {
     }
     
     
+
+
+    // ================= REFEREE MENU =================
+
+    private static void refereeMenu() {
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n===== REFEREE MANAGEMENT =====");
+            System.out.println("1. Register Referee");
+            System.out.println("2. View All Referees");
+            System.out.println("3. Find Referee By ID");
+            System.out.println("4. Update Referee");
+            System.out.println("5. Delete Referee");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            int choice = readInt();
+
+            try {
+                switch (choice) {
+                    case 1 -> {
+                        Long playerId = readLong("Enter Player ID: ");
+                        if (playerId == null) break;
+
+                        System.out.print("Enter certification level: ");
+                        String certification = sc.nextLine().trim();
+
+                        System.out.print("Enter experience years: ");
+                        int years = readInt();
+                        if (years < 0) {
+                            System.out.println("Experience cannot be negative.");
+                            break;
+                        }
+
+                        refereeService.createReferee(playerId, certification, years);
+                        System.out.println("Referee registered successfully.");
+                    }
+                    case 2 -> {
+                        List<Referee> referees = refereeService.getAllReferees();
+                        for (Referee r : referees) {
+                            System.out.println(
+                                "ID: " + r.getId()
+                                + " | Player: " + (r.getPlayer() == null ? "N/A" : r.getPlayer().getName())
+                                + " | Certification: " + r.getCertificationLevel()
+                                + " | Experience: " + r.getExperienceYears()
+                                + " | Status: " + r.getStatus());
+                        }
+                        if (referees.isEmpty()) System.out.println("No referees found.");
+                    }
+                    case 3 -> {
+                        Long id = readLong("Enter Referee ID: ");
+                        if (id == null) break;
+                        Referee r = refereeService.getReferee(id);
+                        if (r == null) {
+                            System.out.println("Referee not found.");
+                        } else {
+                            System.out.println(
+                                "ID: " + r.getId()
+                                + " | Player: " + (r.getPlayer() == null ? "N/A" : r.getPlayer().getName())
+                                + " | Certification: " + r.getCertificationLevel()
+                                + " | Experience: " + r.getExperienceYears()
+                                + " | Status: " + r.getStatus());
+                        }
+                    }
+                    case 4 -> {
+                        Long id = readLong("Enter Referee ID to update: ");
+                        if (id == null) break;
+                        Referee r = refereeService.getReferee(id);
+                        if (r == null) {
+                            System.out.println("Referee not found.");
+                            break;
+                        }
+
+                        System.out.println("Current certification: " + r.getCertificationLevel());
+                        System.out.print("Enter new certification level: ");
+                        r.setCertificationLevel(sc.nextLine().trim());
+
+                        System.out.println("Current experience years: " + r.getExperienceYears());
+                        System.out.print("Enter new experience years: ");
+                        int years = readInt();
+                        if (years < 0) {
+                            System.out.println("Experience cannot be negative.");
+                            break;
+                        }
+                        r.setExperienceYears(years);
+
+                        System.out.println("Current status: " + r.getStatus());
+                        System.out.print("Enter new status (ACTIVE/INACTIVE/SUSPENDED): ");
+                        String status = sc.nextLine().trim().toUpperCase();
+                        if (!List.of("ACTIVE", "INACTIVE", "SUSPENDED").contains(status)) {
+                            System.out.println("Invalid referee status.");
+                            break;
+                        }
+                        r.setStatus(status);
+                        refereeService.updateReferee(r);
+                        System.out.println("Referee updated successfully.");
+                    }
+                    case 5 -> {
+                        Long id = readLong("Enter Referee ID to delete: ");
+                        if (id == null) break;
+                        refereeService.deleteReferee(id);
+                        System.out.println("Referee deleted successfully.");
+                    }
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+
+    // ================= REFEREE ASSIGNMENT MENU =================
+
+    private static void refereeAssignmentMenu() {
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n===== REFEREE ASSIGNMENT MANAGEMENT =====");
+            System.out.println("1. Assign Referee To Match");
+            System.out.println("2. View All Assignments");
+            System.out.println("3. Find Assignment By ID");
+            System.out.println("4. Update Assignment");
+            System.out.println("5. Delete Assignment");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            int choice = readInt();
+
+            try {
+                switch (choice) {
+                    case 1 -> {
+                        Long matchId = readLong("Enter Match ID: ");
+                        if (matchId == null) break;
+                        Long refereeId = readLong("Enter Referee ID: ");
+                        if (refereeId == null) break;
+
+                        System.out.print("Enter role (MAIN_REFEREE/ASSISTANT_REFEREE/LINE_JUDGE): ");
+                        String role = sc.nextLine().trim().toUpperCase();
+
+                        refereeAssignmentService.assignReferee(matchId, refereeId, role);
+                        System.out.println("Referee assigned successfully.");
+                    }
+                    case 2 -> {
+                        List<RefereeAssignment> assignments =
+                                refereeAssignmentService.getAllAssignments();
+                        for (RefereeAssignment a : assignments) {
+                            System.out.println(
+                                "ID: " + a.getId()
+                                + " | Match: " + (a.getMatch() == null ? "N/A" : a.getMatch().getTitle())
+                                + " | Referee: " + (a.getReferee() == null || a.getReferee().getPlayer() == null
+                                    ? "N/A" : a.getReferee().getPlayer().getName())
+                                + " | Role: " + a.getRole()
+                                + " | Assigned At: " + a.getAssignedAt());
+                        }
+                        if (assignments.isEmpty()) System.out.println("No assignments found.");
+                    }
+                    case 3 -> {
+                        Long id = readLong("Enter Assignment ID: ");
+                        if (id == null) break;
+                        RefereeAssignment a = refereeAssignmentService.getAssignment(id);
+                        if (a == null) {
+                            System.out.println("Assignment not found.");
+                        } else {
+                            System.out.println(
+                                "ID: " + a.getId()
+                                + " | Match: " + (a.getMatch() == null ? "N/A" : a.getMatch().getTitle())
+                                + " | Referee: " + (a.getReferee() == null || a.getReferee().getPlayer() == null
+                                    ? "N/A" : a.getReferee().getPlayer().getName())
+                                + " | Role: " + a.getRole()
+                                + " | Assigned At: " + a.getAssignedAt());
+                        }
+                    }
+                    case 4 -> {
+                        Long id = readLong("Enter Assignment ID to update: ");
+                        if (id == null) break;
+                        RefereeAssignment a = refereeAssignmentService.getAssignment(id);
+                        if (a == null) {
+                            System.out.println("Assignment not found.");
+                            break;
+                        }
+
+                        Long matchId = readLong("Enter new Match ID: ");
+                        if (matchId == null) break;
+                        Long refereeId = readLong("Enter new Referee ID: ");
+                        if (refereeId == null) break;
+
+                        // Resolve the related entities through the services.
+                        Match match = matchService.getMatch(matchId);
+                        Referee referee = refereeService.getReferee(refereeId);
+                        if (match == null || referee == null) {
+                            System.out.println("Match or referee not found.");
+                            break;
+                        }
+
+                        System.out.print("Enter new role (MAIN_REFEREE/ASSISTANT_REFEREE/LINE_JUDGE): ");
+                        String role = sc.nextLine().trim().toUpperCase();
+                        if (!List.of("MAIN_REFEREE", "ASSISTANT_REFEREE", "LINE_JUDGE").contains(role)) {
+                            System.out.println("Invalid role.");
+                            break;
+                        }
+
+                        a.setMatch(match);
+                        a.setReferee(referee);
+                        a.setRole(role);
+                        refereeAssignmentService.updateAssignment(a);
+                        System.out.println("Assignment updated successfully.");
+                    }
+                    case 5 -> {
+                        Long id = readLong("Enter Assignment ID to delete: ");
+                        if (id == null) break;
+                        refereeAssignmentService.deleteAssignment(id);
+                        System.out.println("Assignment deleted successfully.");
+                    }
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+
+    // ================= MATCH RESULT MENU =================
+
+    private static void matchResultMenu() {
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n===== MATCH RESULT MANAGEMENT =====");
+            System.out.println("1. Record Match Result");
+            System.out.println("2. View All Results");
+            System.out.println("3. Find Result By ID");
+            System.out.println("4. Update Result");
+            System.out.println("5. Delete Result");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            int choice = readInt();
+
+            try {
+                switch (choice) {
+                    case 1 -> {
+                        Long matchId = readLong("Enter Match ID: ");
+                        if (matchId == null) break;
+                        System.out.print("Enter home score: ");
+                        int home = readInt();
+                        System.out.print("Enter away score: ");
+                        int away = readInt();
+                        if (home < 0 || away < 0) {
+                            System.out.println("Scores must be non-negative.");
+                            break;
+                        }
+                        System.out.print("Enter remarks (optional): ");
+                        String remarks = sc.nextLine();
+                        matchResultService.recordResult(matchId, home, away, remarks);
+                        System.out.println("Match result recorded successfully.");
+                    }
+                    case 2 -> {
+                        List<MatchResult> results = matchResultService.getAllResults();
+                        for (MatchResult r : results) {
+                            System.out.println(
+                                "ID: " + r.getId()
+                                + " | Match: " + (r.getMatch() == null ? "N/A" : r.getMatch().getTitle())
+                                + " | Home: " + r.getHomeScore()
+                                + " | Away: " + r.getAwayScore()
+                                + " | Outcome: " + r.getOutcome()
+                                + " | Recorded At: " + r.getRecordedAt());
+                        }
+                        if (results.isEmpty()) System.out.println("No match results found.");
+                    }
+                    case 3 -> {
+                        Long id = readLong("Enter Result ID: ");
+                        if (id == null) break;
+                        MatchResult r = matchResultService.getResult(id);
+                        if (r == null) {
+                            System.out.println("Match result not found.");
+                        } else {
+                            System.out.println(
+                                "ID: " + r.getId()
+                                + " | Match: " + (r.getMatch() == null ? "N/A" : r.getMatch().getTitle())
+                                + " | Home: " + r.getHomeScore()
+                                + " | Away: " + r.getAwayScore()
+                                + " | Outcome: " + r.getOutcome()
+                                + " | Remarks: " + r.getRemarks());
+                        }
+                    }
+                    case 4 -> {
+                        Long id = readLong("Enter Result ID to update: ");
+                        if (id == null) break;
+                        MatchResult r = matchResultService.getResult(id);
+                        if (r == null) {
+                            System.out.println("Match result not found.");
+                            break;
+                        }
+
+                        System.out.println("Current home score: " + r.getHomeScore());
+                        System.out.print("Enter new home score: ");
+                        int home = readInt();
+                        System.out.println("Current away score: " + r.getAwayScore());
+                        System.out.print("Enter new away score: ");
+                        int away = readInt();
+                        if (home < 0 || away < 0) {
+                            System.out.println("Scores must be non-negative.");
+                            break;
+                        }
+                        System.out.print("Enter new remarks: ");
+                        r.setRemarks(sc.nextLine());
+                        r.setHomeScore(home);
+                        r.setAwayScore(away);
+                        matchResultService.updateResult(r);
+                        System.out.println("Match result updated successfully.");
+                    }
+                    case 5 -> {
+                        Long id = readLong("Enter Result ID to delete: ");
+                        if (id == null) break;
+                        matchResultService.deleteResult(id);
+                        System.out.println("Match result deleted successfully.");
+                    }
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+
+    // ================= TOURNAMENT MENU =================
+
+    private static void tournamentMenu() {
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n===== TOURNAMENT MANAGEMENT =====");
+            System.out.println("1. Create Tournament");
+            System.out.println("2. View All Tournaments");
+            System.out.println("3. Find Tournament By ID");
+            System.out.println("4. Update Tournament");
+            System.out.println("5. Delete Tournament");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            int choice = readInt();
+
+            try {
+                switch (choice) {
+                    case 1 -> {
+                        System.out.print("Enter tournament name: ");
+                        String name = sc.nextLine().trim();
+                        Long sportId = readLong("Enter Sport ID: ");
+                        if (sportId == null) break;
+                        Long organizerId = readLong("Enter Organizer User ID: ");
+                        if (organizerId == null) break;
+                        Long venueId = readLong("Enter Venue ID (0 if not decided): ");
+                        if (venueId == null) break;
+                        if (venueId == 0L) venueId = null;
+
+                        System.out.print("Enter registration start date (YYYY-MM-DD): ");
+                        LocalDate registrationStart = LocalDate.parse(sc.nextLine().trim());
+                        System.out.print("Enter registration end date (YYYY-MM-DD): ");
+                        LocalDate registrationEnd = LocalDate.parse(sc.nextLine().trim());
+                        System.out.print("Enter tournament start date (YYYY-MM-DD): ");
+                        LocalDate startDate = LocalDate.parse(sc.nextLine().trim());
+                        System.out.print("Enter tournament end date (YYYY-MM-DD): ");
+                        LocalDate endDate = LocalDate.parse(sc.nextLine().trim());
+
+                        System.out.print("Enter maximum participants: ");
+                        int maxParticipants = readInt();
+                        System.out.print("Enter format (KNOCKOUT/LEAGUE/ROUND_ROBIN): ");
+                        String format = sc.nextLine().trim().toUpperCase();
+                        System.out.print("Enter description: ");
+                        String description = sc.nextLine();
+
+                        tournamentService.createTournament(
+                            name, sportId, organizerId, venueId,
+                            registrationStart, registrationEnd,
+                            startDate, endDate, maxParticipants, format, description);
+                        System.out.println("Tournament created successfully.");
+                    }
+                    case 2 -> {
+                        List<Tournament> tournaments = tournamentService.getAllTournaments();
+                        for (Tournament t : tournaments) {
+                            System.out.println(
+                                "ID: " + t.getId()
+                                + " | Name: " + t.getName()
+                                + " | Sport: " + (t.getSport() == null ? "N/A" : t.getSport().getName())
+                                + " | Organizer: " + (t.getOrganizer() == null ? "N/A" : t.getOrganizer().getName())
+                                + " | Venue: " + (t.getVenue() == null ? "Not assigned" : t.getVenue().getName())
+                                + " | Dates: " + t.getStartDate() + " to " + t.getEndDate()
+                                + " | Format: " + t.getFormat()
+                                + " | Status: " + t.getStatus());
+                        }
+                        if (tournaments.isEmpty()) System.out.println("No tournaments found.");
+                    }
+                    case 3 -> {
+                        Long id = readLong("Enter Tournament ID: ");
+                        if (id == null) break;
+                        Tournament t = tournamentService.getTournament(id);
+                        if (t == null) {
+                            System.out.println("Tournament not found.");
+                        } else {
+                            System.out.println(
+                                "ID: " + t.getId()
+                                + " | Name: " + t.getName()
+                                + " | Sport: " + (t.getSport() == null ? "N/A" : t.getSport().getName())
+                                + " | Organizer: " + (t.getOrganizer() == null ? "N/A" : t.getOrganizer().getName())
+                                + " | Venue: " + (t.getVenue() == null ? "Not assigned" : t.getVenue().getName())
+                                + " | Registration: " + t.getRegistrationStartDate() + " to " + t.getRegistrationEndDate()
+                                + " | Tournament: " + t.getStartDate() + " to " + t.getEndDate()
+                                + " | Max participants: " + t.getMaximumParticipants()
+                                + " | Format: " + t.getFormat()
+                                + " | Status: " + t.getStatus()
+                                + " | Description: " + t.getDescription());
+                        }
+                    }
+                    case 4 -> {
+                        Long id = readLong("Enter Tournament ID to update: ");
+                        if (id == null) break;
+                        Tournament t = tournamentService.getTournament(id);
+                        if (t == null) {
+                            System.out.println("Tournament not found.");
+                            break;
+                        }
+
+                        System.out.println("Current name: " + t.getName());
+                        System.out.print("Enter new name: ");
+                        t.setName(sc.nextLine().trim());
+
+                        System.out.println("Current registration start: " + t.getRegistrationStartDate());
+                        System.out.print("Enter new registration start (YYYY-MM-DD): ");
+                        t.setRegistrationStartDate(LocalDate.parse(sc.nextLine().trim()));
+                        System.out.println("Current registration end: " + t.getRegistrationEndDate());
+                        System.out.print("Enter new registration end (YYYY-MM-DD): ");
+                        t.setRegistrationEndDate(LocalDate.parse(sc.nextLine().trim()));
+
+                        System.out.println("Current tournament start: " + t.getStartDate());
+                        System.out.print("Enter new tournament start (YYYY-MM-DD): ");
+                        t.setStartDate(LocalDate.parse(sc.nextLine().trim()));
+                        System.out.println("Current tournament end: " + t.getEndDate());
+                        System.out.print("Enter new tournament end (YYYY-MM-DD): ");
+                        t.setEndDate(LocalDate.parse(sc.nextLine().trim()));
+
+                        System.out.println("Current maximum participants: " + t.getMaximumParticipants());
+                        System.out.print("Enter new maximum participants: ");
+                        int max = readInt();
+                        if (max < 2) {
+                            System.out.println("Maximum participants must be at least 2.");
+                            break;
+                        }
+                        t.setMaximumParticipants(max);
+
+                        System.out.println("Current format: " + t.getFormat());
+                        System.out.print("Enter new format (KNOCKOUT/LEAGUE/ROUND_ROBIN): ");
+                        String format = sc.nextLine().trim().toUpperCase();
+                        if (!List.of("KNOCKOUT", "LEAGUE", "ROUND_ROBIN").contains(format)) {
+                            System.out.println("Invalid tournament format.");
+                            break;
+                        }
+                        t.setFormat(format);
+
+                        System.out.println("Current status: " + t.getStatus());
+                        System.out.print("Enter new status (UPCOMING/REGISTRATION_OPEN/ONGOING/COMPLETED/CANCELLED): ");
+                        String status = sc.nextLine().trim().toUpperCase();
+                        if (!List.of("UPCOMING", "REGISTRATION_OPEN", "ONGOING", "COMPLETED", "CANCELLED").contains(status)) {
+                            System.out.println("Invalid tournament status.");
+                            break;
+                        }
+                        t.setStatus(status);
+                        System.out.print("Enter new description: ");
+                        t.setDescription(sc.nextLine());
+
+                        tournamentService.updateTournament(t);
+                        System.out.println("Tournament updated successfully.");
+                    }
+                    case 5 -> {
+                        Long id = readLong("Enter Tournament ID to delete: ");
+                        if (id == null) break;
+                        tournamentService.deleteTournament(id);
+                        System.out.println("Tournament deleted successfully.");
+                    }
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+
+    // ================= TOURNAMENT PARTICIPANT MENU =================
+
+    private static void tournamentParticipantMenu() {
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n===== TOURNAMENT PARTICIPANT MANAGEMENT =====");
+            System.out.println("1. Register Individual Player");
+            System.out.println("2. Register Team");
+            System.out.println("3. View All Participants");
+            System.out.println("4. Find Participant By ID");
+            System.out.println("5. Update Participant Status / Seed");
+            System.out.println("6. Delete Participant");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            int choice = readInt();
+
+            try {
+                switch (choice) {
+                    case 1 -> {
+                        Long tournamentId = readLong("Enter Tournament ID: ");
+                        if (tournamentId == null) break;
+                        Long playerId = readLong("Enter Player ID: ");
+                        if (playerId == null) break;
+                        tournamentParticipantService.registerPlayer(tournamentId, playerId);
+                        System.out.println("Player registered for tournament successfully.");
+                    }
+                    case 2 -> {
+                        Long tournamentId = readLong("Enter Tournament ID: ");
+                        if (tournamentId == null) break;
+                        Long teamId = readLong("Enter Team ID: ");
+                        if (teamId == null) break;
+                        tournamentParticipantService.registerTeam(tournamentId, teamId);
+                        System.out.println("Team registered for tournament successfully.");
+                    }
+                    case 3 -> {
+                        List<TournamentParticipant> participants =
+                                tournamentParticipantService.getAllParticipants();
+                        for (TournamentParticipant p : participants) {
+                            String name = p.getPlayer() != null
+                                    ? p.getPlayer().getName()
+                                    : p.getTeam() != null ? p.getTeam().getName() : "Unknown";
+                            String type = p.getPlayer() != null ? "PLAYER"
+                                    : p.getTeam() != null ? "TEAM" : "INVALID";
+                            System.out.println(
+                                "ID: " + p.getId()
+                                + " | Tournament: " + (p.getTournament() == null ? "N/A" : p.getTournament().getName())
+                                + " | Type: " + type
+                                + " | Participant: " + name
+                                + " | Status: " + p.getStatus()
+                                + " | Seed: " + p.getSeedNumber()
+                                + " | Registered: " + p.getRegisteredAt());
+                        }
+                        if (participants.isEmpty()) System.out.println("No tournament participants found.");
+                    }
+                    case 4 -> {
+                        Long id = readLong("Enter Tournament Participant ID: ");
+                        if (id == null) break;
+                        TournamentParticipant p = tournamentParticipantService.getParticipant(id);
+                        if (p == null) {
+                            System.out.println("Tournament participant not found.");
+                        } else {
+                            String name = p.getPlayer() != null
+                                    ? p.getPlayer().getName()
+                                    : p.getTeam() != null ? p.getTeam().getName() : "Unknown";
+                            System.out.println(
+                                "ID: " + p.getId()
+                                + " | Tournament: " + (p.getTournament() == null ? "N/A" : p.getTournament().getName())
+                                + " | Participant: " + name
+                                + " | Status: " + p.getStatus()
+                                + " | Seed: " + p.getSeedNumber()
+                                + " | Registered: " + p.getRegisteredAt());
+                        }
+                    }
+                    case 5 -> {
+                        Long id = readLong("Enter Tournament Participant ID to update: ");
+                        if (id == null) break;
+                        TournamentParticipant p = tournamentParticipantService.getParticipant(id);
+                        if (p == null) {
+                            System.out.println("Tournament participant not found.");
+                            break;
+                        }
+
+                        System.out.println("Current status: " + p.getStatus());
+                        System.out.print("Enter new status (REGISTERED/CONFIRMED/WITHDRAWN/DISQUALIFIED): ");
+                        String status = sc.nextLine().trim().toUpperCase();
+                        if (!List.of("REGISTERED", "CONFIRMED", "WITHDRAWN", "DISQUALIFIED").contains(status)) {
+                            System.out.println("Invalid participant status.");
+                            break;
+                        }
+
+                        System.out.println("Current seed number: " + p.getSeedNumber());
+                        System.out.print("Enter seed number (0 or blank for no seed): ");
+                        String seedInput = sc.nextLine().trim();
+                        Integer seed = null;
+                        if (!seedInput.isEmpty() && !seedInput.equals("0")) {
+                            try {
+                                seed = Integer.parseInt(seedInput);
+                            } catch (NumberFormatException ex) {
+                                System.out.println("Invalid seed number.");
+                                break;
+                            }
+                            if (seed < 1) {
+                                System.out.println("Seed number must be positive.");
+                                break;
+                            }
+                        }
+
+                        p.setStatus(status);
+                        p.setSeedNumber(seed);
+                        tournamentParticipantService.updateParticipant(p);
+                        System.out.println("Tournament participant updated successfully.");
+                    }
+                    case 6 -> {
+                        Long id = readLong("Enter Tournament Participant ID to delete: ");
+                        if (id == null) break;
+                        tournamentParticipantService.deleteParticipant(id);
+                        System.out.println("Tournament participant deleted successfully.");
+                    }
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+
+    // ================= TOURNAMENT MATCH MENU =================
+
+    private static void tournamentMatchMenu() {
+        boolean back = false;
+
+        while (!back) {
+            System.out.println("\n===== TOURNAMENT MATCH MANAGEMENT =====");
+            System.out.println("1. Add Existing Match To Tournament");
+            System.out.println("2. View All Tournament Matches");
+            System.out.println("3. Find Tournament Match By ID");
+            System.out.println("4. Update Tournament Match");
+            System.out.println("5. Remove Match From Tournament");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            int choice = readInt();
+
+            try {
+                switch (choice) {
+                    case 1 -> {
+                        Long tournamentId = readLong("Enter Tournament ID: ");
+                        if (tournamentId == null) break;
+                        Long matchId = readLong("Enter existing Match ID: ");
+                        if (matchId == null) break;
+
+                        System.out.print("Enter round number (1, 2, 3...): ");
+                        int roundNumber = readInt();
+                        System.out.print("Enter match number within tournament: ");
+                        int matchNumber = readInt();
+                        if (roundNumber < 1 || matchNumber < 1) {
+                            System.out.println("Round and match numbers must be positive.");
+                            break;
+                        }
+
+                        System.out.print("Enter round name (e.g. Quarter-final/Final): ");
+                        String roundName = sc.nextLine().trim();
+                        System.out.print("Enter bracket position (optional): ");
+                        String bracket = sc.nextLine().trim();
+                        if (bracket.isEmpty()) bracket = null;
+
+                        tournamentMatchService.addMatch(
+                            tournamentId, matchId, roundNumber, matchNumber,
+                            roundName.isEmpty() ? null : roundName, bracket);
+                        System.out.println("Match added to tournament successfully.");
+                    }
+                    case 2 -> {
+                        List<TournamentMatch> records =
+                                tournamentMatchService.getAllTournamentMatches();
+                        for (TournamentMatch tm : records) {
+                            System.out.println(
+                                "ID: " + tm.getId()
+                                + " | Tournament: " + (tm.getTournament() == null ? "N/A" : tm.getTournament().getName())
+                                + " | Match: " + (tm.getMatch() == null ? "N/A" : tm.getMatch().getTitle())
+                                + " | Round: " + tm.getRoundNumber()
+                                + " (" + tm.getRoundName() + ")"
+                                + " | Match number: " + tm.getMatchNumber()
+                                + " | Bracket: " + tm.getBracketPosition()
+                                + " | Status: " + tm.getStatus());
+                        }
+                        if (records.isEmpty()) System.out.println("No tournament matches found.");
+                    }
+                    case 3 -> {
+                        Long id = readLong("Enter Tournament Match ID: ");
+                        if (id == null) break;
+                        TournamentMatch tm = tournamentMatchService.getTournamentMatch(id);
+                        if (tm == null) {
+                            System.out.println("Tournament match not found.");
+                        } else {
+                            System.out.println(
+                                "ID: " + tm.getId()
+                                + " | Tournament: " + (tm.getTournament() == null ? "N/A" : tm.getTournament().getName())
+                                + " | Match: " + (tm.getMatch() == null ? "N/A" : tm.getMatch().getTitle())
+                                + " | Round: " + tm.getRoundNumber()
+                                + " (" + tm.getRoundName() + ")"
+                                + " | Match number: " + tm.getMatchNumber()
+                                + " | Bracket: " + tm.getBracketPosition()
+                                + " | Status: " + tm.getStatus());
+                        }
+                    }
+                    case 4 -> {
+                        Long id = readLong("Enter Tournament Match ID to update: ");
+                        if (id == null) break;
+                        TournamentMatch tm = tournamentMatchService.getTournamentMatch(id);
+                        if (tm == null) {
+                            System.out.println("Tournament match not found.");
+                            break;
+                        }
+
+                        System.out.println("Current round number: " + tm.getRoundNumber());
+                        System.out.print("Enter new round number: ");
+                        int round = readInt();
+                        System.out.println("Current match number: " + tm.getMatchNumber());
+                        System.out.print("Enter new match number: ");
+                        int number = readInt();
+                        if (round < 1 || number < 1) {
+                            System.out.println("Round and match numbers must be positive.");
+                            break;
+                        }
+
+                        System.out.print("Enter new round name: ");
+                        String roundName = sc.nextLine().trim();
+                        System.out.print("Enter new bracket position (optional): ");
+                        String bracket = sc.nextLine().trim();
+                        if (bracket.isEmpty()) bracket = null;
+
+                        System.out.print("Enter status (SCHEDULED/IN_PROGRESS/COMPLETED/CANCELLED): ");
+                        String status = sc.nextLine().trim().toUpperCase();
+                        if (!List.of("SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED").contains(status)) {
+                            System.out.println("Invalid tournament match status.");
+                            break;
+                        }
+
+                        tm.setRoundNumber(round);
+                        tm.setMatchNumber(number);
+                        tm.setRoundName(roundName.isEmpty() ? null : roundName);
+                        tm.setBracketPosition(bracket);
+                        tm.setStatus(status);
+
+                        tournamentMatchService.updateTournamentMatch(tm);
+                        System.out.println("Tournament match updated successfully.");
+                    }
+                    case 5 -> {
+                        Long id = readLong("Enter Tournament Match ID to remove: ");
+                        if (id == null) break;
+                        tournamentMatchService.deleteTournamentMatch(id);
+                        System.out.println("Match removed from tournament successfully.");
+                    }
+                    case 0 -> back = true;
+                    default -> System.out.println("Invalid choice.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+
 }

@@ -23,5 +23,12 @@
 		<mapping class="com.tournament.teamupAndChallenge.entity.Venue"/>
 		<mapping class="com.tournament.teamupAndChallenge.entity.Match"/>
 		<mapping class="com.tournament.teamupAndChallenge.entity.MatchParticipant"/>
+		
+		<mapping class="com.tournament.teamupAndChallenge.entity.Referee"/>
+		<mapping class="com.tournament.teamupAndChallenge.entity.RefereeAssignment"/>
+		<mapping class="com.tournament.teamupAndChallenge.entity.MatchResult"/>
+		<mapping class="com.tournament.teamupAndChallenge.entity.Tournament"/>
+		<mapping class="com.tournament.teamupAndChallenge.entity.TournamentParticipant"/>
+		<mapping class="com.tournament.teamupAndChallenge.entity.TournamentMatch"/>
     </session-factory>
 </hibernate-configuration>
